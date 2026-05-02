@@ -41,6 +41,10 @@ public class ModelManager {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 for (ModelInstance instance : activeInstances) {
                     if (instance.getRenderMode() == RenderMode.PACKET) {
+                        if (!player.getWorld().equals(instance.getOrigin().getWorld())) {
+                            instance.removeViewer(player);
+                            continue;
+                        }
                         double distSq = player.getLocation().distanceSquared(instance.getOrigin());
                         if (distSq <= instance.getViewDistance() * instance.getViewDistance()) {
                             instance.addViewer(player);

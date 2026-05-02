@@ -125,7 +125,10 @@ public class ModelCommandRegistrar {
             return 0;
         }
 
-        ModelInstance instance = ModelManager.spawnModel(modelName, player.getLocation(), scale, new Vector3f(0, 0, 0), mode, viewDistance, argbColor);
+        Location loc = player.getLocation();
+        loc.setYaw(0);
+        loc.setPitch(0);
+        ModelInstance instance = ModelManager.spawnModel(modelName, loc, scale, new Vector3f(0, 0, 0), mode, viewDistance, argbColor);
         if (instance != null) {
             if (mode == RenderMode.PACKET) {
                 instance.addViewer(player);
