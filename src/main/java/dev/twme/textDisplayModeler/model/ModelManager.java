@@ -34,7 +34,30 @@ public class ModelManager {
             }
         }
         instancesConfig = YamlConfiguration.loadConfiguration(instancesFile);
-        loadInstances();
+        
+        // Load instances for already loaded worlds
+        for (org.bukkit.World world : Bukkit.getWorlds()) {
+            loadInstances(world.getName());
+        }
+
+        // Register world load/unload listeners
+        Bukkit.getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+            @org.bukkit.event.EventHandler
+            public void onWorldLoad(org.bukkit.event.world.WorldLoadEvent event) {
+                loadInstances(event.getWorld().getName());
+            }
+
+            @org.bukkit.event.EventHandler
+            public void onWorldUnload(org.bukkit.event.world.WorldUnloadEvent event) {
+                activeInstances.removeIf(instance -> {
+                    if (instance.getOrigin().getWorld().equals(event.getWorld())) {
+                        instance.remove();
+                        return true;
+                    }
+                    return false;
+                });
+            }
+        }, TextDisplayModeler.getInstance());
 
         // Visibility task
         Bukkit.getScheduler().runTaskTimer(TextDisplayModeler.getInstance(), () -> {
@@ -57,7 +80,7 @@ public class ModelManager {
         }, 20L, 10L);
     }
 
-    private static void loadInstances() {
+    private static void loadInstances(String worldName) {
         ConfigurationSection section = instancesConfig.getConfigurationSection("instances");
         if (section == null) return;
 
@@ -65,9 +88,20 @@ public class ModelManager {
             ConfigurationSection instanceSec = section.getConfigurationSection(key);
             if (instanceSec == null) continue;
 
-            UUID id = UUID.fromString(key);
-            String modelName = instanceSec.getString("modelName");
+            // Check world name before getting location to avoid "unknown world" error
+            String storedWorld = instanceSec.getString("location.world");
+            if (storedWorld == null || !storedWorld.equals(worldName)) continue;
+
             Location loc = instanceSec.getLocation("location");
+            if (loc == null || loc.getWorld() == null) continue;
+
+            UUID id = UUID.fromString(key);
+            
+            // Avoid duplicate loading
+            boolean alreadyActive = activeInstances.stream().anyMatch(i -> i.getInstanceId().equals(id));
+            if (alreadyActive) continue;
+
+            String modelName = instanceSec.getString("modelName");
             float scale = (float) instanceSec.getDouble("scale", 1.0);
             Vector3f rot = new Vector3f(
                     (float) instanceSec.getDouble("rotation.x", 0),
