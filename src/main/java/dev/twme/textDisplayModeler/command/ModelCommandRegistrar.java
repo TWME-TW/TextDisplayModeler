@@ -6,6 +6,7 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import dev.twme.textdisplaymodeler.LanguageManager;
 import dev.twme.textdisplaymodeler.model.ModelInstance;
@@ -21,7 +22,6 @@ import org.joml.Vector3f;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ModelCommandRegistrar {
 
@@ -34,7 +34,8 @@ public class ModelCommandRegistrar {
                 .then(Commands.argument("filename", StringArgumentType.string())
                         .suggests((context, suggestionsBuilder) -> {
                             File modelFolder = new File(dev.twme.textdisplaymodeler.TextDisplayModeler.getInstance().getDataFolder(), "models");
-                            File[] files = modelFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".stl"));
+                            File[] files = modelFolder.listFiles((dir, name) -> 
+                                    name.toLowerCase().endsWith(".stl") || name.toLowerCase().endsWith(".obj"));
                             if (files != null) {
                                 for (File file : files) {
                                     suggestionsBuilder.suggest(file.getName());
@@ -44,23 +45,44 @@ public class ModelCommandRegistrar {
                         })
                         .executes(this::executeLoad)));
 
-        // Subcommand: spawn <name> <mode> [scale] [viewDistance]
+        // Subcommand: spawn <name> <mode> [scale] [viewDistance] [color]
+        var nameArg = Commands.argument("name", StringArgumentType.string())
+                .suggests((ctx, sb) -> {
+                    ModelManager.getLoadedFacets().keySet().forEach(sb::suggest);
+                    return sb.buildFuture();
+                });
+
+        var modeArg = Commands.argument("mode", StringArgumentType.string())
+                .suggests((ctx, sb) -> {
+                    Arrays.stream(RenderMode.values()).forEach(mode -> sb.suggest(mode.name().toLowerCase()));
+                    return sb.buildFuture();
+                })
+                .executes(ctx -> executeSpawn(ctx, 1.0f, 64.0, 0xFFFFFFFF));
+
+        var scaleArg = Commands.argument("scale", FloatArgumentType.floatArg(0.01f))
+                .executes(ctx -> executeSpawn(ctx, FloatArgumentType.getFloat(ctx, "scale"), 64.0, 0xFFFFFFFF));
+
+        var viewDistArg = Commands.argument("viewDistance", DoubleArgumentType.doubleArg(1.0, 512.0))
+                .executes(ctx -> executeSpawn(ctx, 
+                        FloatArgumentType.getFloat(ctx, "scale"), 
+                        DoubleArgumentType.getDouble(ctx, "viewDistance"),
+                        0xFFFFFFFF));
+
+        var colorArg = Commands.argument("color", StringArgumentType.string())
+                .suggests((ctx, sb) -> {
+                    sb.suggest("#FFFFFF");
+                    sb.suggest("#FF0000");
+                    sb.suggest("#00FF00");
+                    sb.suggest("#0000FF");
+                    return sb.buildFuture();
+                })
+                .executes(ctx -> executeSpawn(ctx,
+                        FloatArgumentType.getFloat(ctx, "scale"),
+                        DoubleArgumentType.getDouble(ctx, "viewDistance"),
+                        parseHexColor(StringArgumentType.getString(ctx, "color"))));
+
         builder.then(Commands.literal("spawn")
-                .then(Commands.argument("name", StringArgumentType.string())
-                        .suggests((context, suggestionsBuilder) -> {
-                            ModelManager.getLoadedFacets().keySet().forEach(suggestionsBuilder::suggest);
-                            return suggestionsBuilder.buildFuture();
-                        })
-                        .then(Commands.argument("mode", StringArgumentType.string())
-                                .suggests((context, suggestionsBuilder) -> {
-                                    Arrays.stream(RenderMode.values()).forEach(mode -> suggestionsBuilder.suggest(mode.name().toLowerCase()));
-                                    return suggestionsBuilder.buildFuture();
-                                })
-                                .executes(ctx -> executeSpawn(ctx, 1.0f, 64.0))
-                                .then(Commands.argument("scale", FloatArgumentType.floatArg(0.01f))
-                                        .executes(ctx -> executeSpawn(ctx, FloatArgumentType.getFloat(ctx, "scale"), 64.0))
-                                        .then(Commands.argument("viewDistance", DoubleArgumentType.doubleArg(1.0))
-                                                .executes(ctx -> executeSpawn(ctx, FloatArgumentType.getFloat(ctx, "scale"), DoubleArgumentType.getDouble(ctx, "viewDistance"))))))));
+                .then(nameArg.then(modeArg.then(scaleArg.then(viewDistArg.then(colorArg))))));
 
         // Subcommand: list [page]
         builder.then(Commands.literal("list")
@@ -78,7 +100,7 @@ public class ModelCommandRegistrar {
     private int executeLoad(CommandContext<CommandSourceStack> context) {
         if (!(context.getSource().getSender() instanceof Player player)) return 0;
         String fileName = StringArgumentType.getString(context, "filename");
-        String modelName = fileName.replace(".stl", "");
+        String modelName = fileName.replaceAll("(?i)\\.(stl|obj)$", "");
         if (ModelManager.loadModel(modelName, fileName)) {
             player.sendMessage(LanguageManager.getMessage("load.success", Placeholder.parsed("name", modelName)));
         } else {
@@ -87,7 +109,7 @@ public class ModelCommandRegistrar {
         return Command.SINGLE_SUCCESS;
     }
 
-    private int executeSpawn(CommandContext<CommandSourceStack> context, float scale, double viewDistance) {
+    private int executeSpawn(CommandContext<CommandSourceStack> context, float scale, double viewDistance, int argbColor) {
         if (!(context.getSource().getSender() instanceof Player player)) return 0;
         String modelName = StringArgumentType.getString(context, "name");
         String modeStr = StringArgumentType.getString(context, "mode");
@@ -99,7 +121,7 @@ public class ModelCommandRegistrar {
             return 0;
         }
 
-        ModelInstance instance = ModelManager.spawnModel(modelName, player.getLocation(), scale, new Vector3f(0, 0, 0), mode, viewDistance);
+        ModelInstance instance = ModelManager.spawnModel(modelName, player.getLocation(), scale, new Vector3f(0, 0, 0), mode, viewDistance, argbColor);
         if (instance != null) {
             if (mode == RenderMode.PACKET) {
                 instance.addViewer(player);
@@ -116,10 +138,25 @@ public class ModelCommandRegistrar {
         return Command.SINGLE_SUCCESS;
     }
 
+    private int parseHexColor(String hex) {
+        try {
+            if (hex.startsWith("#")) {
+                hex = hex.substring(1);
+            }
+            if (hex.length() == 6) {
+                return 0xFF000000 | Integer.parseInt(hex, 16);
+            } else if (hex.length() == 8) {
+                return (int) Long.parseLong(hex, 16);
+            }
+        } catch (NumberFormatException ignored) {}
+        return 0xFFFFFFFF; // Default to white if invalid
+    }
+
     private int executeList(CommandContext<CommandSourceStack> context, int page) {
         if (!(context.getSource().getSender() instanceof Player player)) return 0;
         File modelFolder = new File(dev.twme.textdisplaymodeler.TextDisplayModeler.getInstance().getDataFolder(), "models");
-        File[] files = modelFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".stl"));
+        File[] files = modelFolder.listFiles((dir, name) -> 
+                name.toLowerCase().endsWith(".stl") || name.toLowerCase().endsWith(".obj"));
 
         if (files == null || files.length == 0) {
             player.sendMessage(LanguageManager.getMessage("list.no_files"));
@@ -144,7 +181,7 @@ public class ModelCommandRegistrar {
 
         for (int i = start; i < end; i++) {
             String fileName = files[i].getName();
-            String modelName = fileName.replace(".stl", "");
+            String modelName = fileName.replaceAll("(?i)\\.(stl|obj)$", "");
             player.sendMessage(LanguageManager.getMessage("list.item",
                     Placeholder.parsed("file", fileName),
                     Placeholder.parsed("name", modelName)

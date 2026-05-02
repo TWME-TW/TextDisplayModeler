@@ -3,32 +3,31 @@
 
 prefix: "<gold>[TSModel] </gold>"
 
-commands:
-  help:
-    header: "<gold>=== TextDisplayModeler Commands ===</gold>"
-    list: "<yellow>/tsmodel list [page]</yellow> <gray>- List all STL files</gray>"
-    load: "<yellow>/tsmodel load <filename></yellow> <gray>- Load an STL file</gray>"
-    spawn: "<yellow>/tsmodel spawn <name> <bukkit|packet> [scale] [viewDistance]</yellow> <gray>- Spawn a model</gray>"
-    removeall: "<yellow>/tsmodel removeall</yellow> <gray>- Remove all models</gray>"
-  
-  list:
-    header: "<gold>=== STL Files (Page <page>/<total>) ===</gold>"
-    item: "<yellow>- <click:run_command:'/tsmodel load <file>'><hover:show_text:'<green>Click to load <file>'><white><file></white></hover></click> <gray>[<click:suggest_command:'/tsmodel spawn <name> packet 1.0 64'><hover:show_text:'<aqua>Click to suggest spawn command'>Spawn</hover></click>]</gray>"
-    footer: "<gray>Use /tsmodel list <page> to see more.</gray>"
-    no_files: "<red>No .stl files found in models folder.</red>"
-    invalid_page: "<red>Invalid page number. Total pages: <total></red>"
+help:
+  header: "<gold>=== TextDisplayModeler Commands ===</gold>"
+  list: "<yellow>/tsmodel list [page]</yellow> <gray>- List all models</gray>"
+  load: "<yellow>/tsmodel load <filename></yellow> <gray>- Load a model file</gray>"
+  spawn: "<yellow>/tsmodel spawn <name> <bukkit|packet> [scale] [viewDistance] [color]</yellow> <gray>- Spawn a model</gray>"
+  removeall: "<yellow>/tsmodel removeall</yellow> <gray>- Remove all models</gray>"
 
-  load:
-    success: "<green>Successfully loaded model: <name></green>"
-    fail: "<red>Failed to load model. Check if the file exists in plugins/TextDisplayModeler/models/</red>"
-    usage: "<red>Usage: /tsmodel load <filename></red>"
+list:
+  header: "<gold>=== Models (Page <page>/<total>) ===</gold>"
+  item: "<yellow>- <click:run_command:'/tsmodel load <file>'><hover:show_text:'<green>Click to load <file>'><white><file></white></hover></click> <gray>[<click:suggest_command:'/tsmodel spawn <name> packet 1.0 64'><hover:show_text:'<aqua>Click to suggest spawn command'>Spawn</hover></click>]</gray>"
+  footer: "<gray>Use /tsmodel list <page> to see more.</gray>"
+  no_files: "<red>No .stl or .obj files found in models folder.</red>"
+  invalid_page: "<red>Invalid page number. Total pages: <total></red>"
 
-  spawn:
-    success: "<green>Spawned model: <name> (Mode: <mode>, Scale: <scale>, ViewDist: <viewdist>)</green>"
-    fail: "<red>Model not found. Load it first using /tsmodel load</red>"
-    invalid_mode: "<red>Invalid mode. Use 'bukkit' or 'packet'.</red>"
-    usage: "<red>Usage: /tsmodel spawn <modelName> <bukkit|packet> [scale] [viewDistance]</red>"
+load:
+  success: "<green>Successfully loaded model: <name></green>"
+  fail: "<red>Failed to load model. Check if the file exists in plugins/TextDisplayModeler/models/</red>"
+  usage: "<red>Usage: /tsmodel load <filename></red>"
 
-  system:
-    remove_all: "<yellow>Removed all active model instances.</yellow>"
-    player_only: "<red>Only players can use this command.</red>"
+spawn:
+  success: "<green>Spawned model: <name> (Mode: <mode>, Scale: <scale>, ViewDist: <viewdist>)</green>"
+  fail: "<red>Model not found. Load it first using /tsmodel load</red>"
+  invalid_mode: "<red>Invalid mode. Use 'bukkit' or 'packet'.</red>"
+  usage: "<red>Usage: /tsmodel spawn <modelName> <bukkit|packet> [scale] [viewDistance] [color]</red>"
+
+system:
+  remove_all: "<yellow>Removed all active model instances.</yellow>"
+  player_only: "<red>Only players can use this command.</red>"

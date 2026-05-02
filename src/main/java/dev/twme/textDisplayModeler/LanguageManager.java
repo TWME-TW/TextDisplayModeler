@@ -4,37 +4,39 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 
 public class LanguageManager {
+    private static JavaPlugin plugin;
+    private static File langFile;
     private static YamlConfiguration langConfig;
-    private static final MiniMessage mm = MiniMessage.miniMessage();
+    private static final MiniMessage miniMessage = MiniMessage.miniMessage();
 
     public static void init() {
-        TextDisplayModeler plugin = TextDisplayModeler.getInstance();
-        File langFile = new File(plugin.getDataFolder(), "messages.yml");
+        plugin = TextDisplayModeler.getInstance();
+        langFile = new File(plugin.getDataFolder(), "messages.yml");
+
         if (!langFile.exists()) {
             plugin.saveResource("messages.yml", false);
         }
+
         langConfig = YamlConfiguration.loadConfiguration(langFile);
+    }
 
-        // Load defaults from jar
-        InputStream defStream = plugin.getResource("messages.yml");
-        if (defStream != null) {
-            langConfig.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(defStream, StandardCharsets.UTF_8)));
+    public static Component getMessage(String key, TagResolver... placeholders) {
+        String message = langConfig.getString(key);
+        if (message == null) {
+            // Try with 'commands.' prefix as a fallback if not found
+            message = langConfig.getString("commands." + key);
         }
-    }
+        
+        if (message == null) {
+            return Component.text("Missing message: " + key);
+        }
 
-    public static Component getMessage(String path, TagResolver... resolvers) {
-        String message = langConfig.getString(path, "Missing message: " + path);
-        return mm.deserialize(message, resolvers);
-    }
-
-    public static String getString(String path) {
-        return langConfig.getString(path, "");
+        Component prefix = miniMessage.deserialize(langConfig.getString("prefix", ""));
+        return prefix.append(miniMessage.deserialize(message, placeholders));
     }
 }

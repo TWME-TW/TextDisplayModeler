@@ -18,16 +18,17 @@ public class ModelRenderer {
     private static final BukkitShapeFactory bukkitFactory = new BukkitShapeFactory();
 
     public static ModelInstance assemble(String modelName, List<Facet> facets, Location origin, float scale,
-            Vector3f rotation, RenderMode mode, double viewDistance) {
-        return assemble(UUID.randomUUID(), modelName, facets, origin, scale, rotation, mode, viewDistance);
+            Vector3f rotation, RenderMode mode, double viewDistance, int argbColor) {
+        return assemble(UUID.randomUUID(), modelName, facets, origin, scale, rotation, mode, viewDistance, argbColor);
     }
 
     public static ModelInstance assemble(UUID instanceId, String modelName, List<Facet> facets, Location origin,
-            float scale, Vector3f rotation, RenderMode mode, double viewDistance) {
+            float scale, Vector3f rotation, RenderMode mode, double viewDistance, int argbColor) {
         ModelInstance instance = new ModelInstance(instanceId, modelName, facets, origin, mode);
         instance.setScale(scale);
         instance.setRotation(rotation);
         instance.setViewDistance(viewDistance);
+        instance.setArgbColor(argbColor);
 
         Matrix4f transform = new Matrix4f()
                 .scale(scale)
@@ -44,15 +45,19 @@ public class ModelRenderer {
             transform.transformPosition(v2);
             transform.transformPosition(v3);
 
+            int finalColor = facet.color() != null ? facet.color() : argbColor;
+
             Shape triangle;
             if (mode == RenderMode.PACKET) {
                 triangle = packetFactory.triangle(origin, v1, v2, v3)
+                        .color(finalColor)
                         .doubleSided(false)
                         .seeThrough(false)
                         .viewRange((float) viewDistance / 16f)
                         .build();
             } else {
                 triangle = bukkitFactory.triangle(origin, v1, v2, v3)
+                        .color(finalColor)
                         .doubleSided(false)
                         .seeThrough(false)
                         .viewRange((float) viewDistance / 16f)

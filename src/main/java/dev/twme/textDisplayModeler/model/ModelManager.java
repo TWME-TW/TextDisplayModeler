@@ -72,14 +72,17 @@ public class ModelManager {
             );
             RenderMode mode = RenderMode.valueOf(instanceSec.getString("mode", "PACKET"));
             double viewDist = instanceSec.getDouble("viewDistance", 64.0);
+            int color = instanceSec.getInt("color", 0xFFFFFFFF);
 
-            // Make sure facets are loaded
+            // Try to find the file with either .stl or .obj
             if (!loadedFacets.containsKey(modelName)) {
-                loadModel(modelName, modelName + ".stl");
+                if (!loadModel(modelName, modelName + ".stl")) {
+                    loadModel(modelName, modelName + ".obj");
+                }
             }
 
             if (loadedFacets.containsKey(modelName)) {
-                ModelInstance instance = ModelRenderer.assemble(id, modelName, loadedFacets.get(modelName), loc, scale, rot, mode, viewDist);
+                ModelInstance instance = ModelRenderer.assemble(id, modelName, loadedFacets.get(modelName), loc, scale, rot, mode, viewDist, color);
                 instance.spawn();
                 activeInstances.add(instance);
             }
@@ -98,6 +101,7 @@ public class ModelManager {
             instancesConfig.set(path + ".rotation.z", instance.getRotation().z);
             instancesConfig.set(path + ".mode", instance.getRenderMode().name());
             instancesConfig.set(path + ".viewDistance", instance.getViewDistance());
+            instancesConfig.set(path + ".color", instance.getArgbColor());
         }
         try {
             instancesConfig.save(instancesFile);
@@ -112,7 +116,12 @@ public class ModelManager {
             return false;
         }
         try {
-            List<Facet> facets = STLReader.read(file);
+            List<Facet> facets;
+            if (fileName.toLowerCase().endsWith(".obj")) {
+                facets = dev.twme.textdisplaymodeler.loader.OBJReader.read(file);
+            } else {
+                facets = STLReader.read(file);
+            }
             loadedFacets.put(name, facets);
             return true;
         } catch (IOException e) {
@@ -121,12 +130,12 @@ public class ModelManager {
         }
     }
 
-    public static ModelInstance spawnModel(String name, Location location, float scale, Vector3f rotation, RenderMode mode, double viewDistance) {
+    public static ModelInstance spawnModel(String name, Location location, float scale, Vector3f rotation, RenderMode mode, double viewDistance, int color) {
         List<Facet> facets = loadedFacets.get(name);
         if (facets == null) {
             return null;
         }
-        ModelInstance instance = ModelRenderer.assemble(name, facets, location, scale, rotation, mode, viewDistance);
+        ModelInstance instance = ModelRenderer.assemble(name, facets, location, scale, rotation, mode, viewDistance, color);
         instance.spawn();
         activeInstances.add(instance);
         saveInstances();
