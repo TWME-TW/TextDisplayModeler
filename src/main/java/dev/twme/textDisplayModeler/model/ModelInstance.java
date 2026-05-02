@@ -61,7 +61,7 @@ public class ModelInstance {
                     meta.setBackgroundColor(0);
                     if (packetRoot.getEntityMeta() instanceof AbstractDisplayMeta displayMeta) {
                         displayMeta.setViewRange((float) viewDistance / 16f);
-                        displayMeta.setScale(new com.github.retrooper.packetevents.util.Vector3f(0.0001f, 0.0001f, 0.0001f));
+                        displayMeta.setScale(new com.github.retrooper.packetevents.util.Vector3f(1f, 1f, 1f));
                     }
                 }
 
