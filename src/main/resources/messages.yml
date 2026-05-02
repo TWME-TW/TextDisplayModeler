@@ -12,13 +12,13 @@ help:
 
 list:
   header: "<gold>=== Models (Page <page>/<total>) ===</gold>"
-  item: "<yellow>- <click:run_command:'/tsmodel load <file>'><hover:show_text:'<green>Click to load <file>'><white><file></white></hover></click> <gray>[<click:suggest_command:'/tsmodel spawn <name> packet 1.0 64'><hover:show_text:'<aqua>Click to suggest spawn command'>Spawn</hover></click>]</gray>"
+  item: "<yellow>- <white><file></white> <gray>[<click:run_command:'/tsmodel load <file>'><hover:show_text:'<green>Click to load <file>'><aqua>Load</aqua></hover></click>] [<click:suggest_command:'/tsmodel spawn <name> packet 1.0 64'><hover:show_text:'<aqua>Click to suggest spawn command'><green>Spawn</green></hover></click>]</gray>"
   footer: "<gray>Use /tsmodel list <page> to see more.</gray>"
   no_files: "<red>No .stl or .obj files found in models folder.</red>"
   invalid_page: "<red>Invalid page number. Total pages: <total></red>"
 
 load:
-  success: "<green>Successfully loaded model: <name></green>"
+  success: "<green>Successfully loaded model: <name> (<facets> facets)</green>"
   fail: "<red>Failed to load model. Check if the file exists in plugins/TextDisplayModeler/models/</red>"
   usage: "<red>Usage: /tsmodel load <filename></red>"
 

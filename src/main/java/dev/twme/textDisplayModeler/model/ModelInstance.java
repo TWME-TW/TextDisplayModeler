@@ -1,5 +1,6 @@
 package dev.twme.textdisplaymodeler.model;
 
+import dev.twme.textdisplaymodeler.TextDisplayModeler;
 import dev.twme.textdisplayshape.packet.PacketTriangle;
 import dev.twme.textdisplayshape.shape.Shape;
 import me.tofaa.entitylib.meta.display.AbstractDisplayMeta;
@@ -52,16 +53,37 @@ public class ModelInstance {
         if (spawned) return;
 
         if (renderMode == RenderMode.PACKET) {
-            packetRoot = new WrapperEntity(com.github.retrooper.packetevents.protocol.entity.type.EntityTypes.TEXT_DISPLAY);
-            packetRoot.spawn(io.github.retrooper.packetevents.util.SpigotConversionUtil.fromBukkitLocation(origin));
-            if (packetRoot.getEntityMeta() instanceof TextDisplayMeta meta) {
-                meta.setText(net.kyori.adventure.text.Component.empty());
-                meta.setBackgroundColor(0);
-                if (packetRoot.getEntityMeta() instanceof AbstractDisplayMeta displayMeta) {
-                    displayMeta.setViewRange((float) viewDistance / 16f);
-                    displayMeta.setScale(new com.github.retrooper.packetevents.util.Vector3f(0.0001f, 0.0001f, 0.0001f));
+            Bukkit.getScheduler().runTaskAsynchronously(TextDisplayModeler.getInstance(), () -> {
+                packetRoot = new WrapperEntity(com.github.retrooper.packetevents.protocol.entity.type.EntityTypes.TEXT_DISPLAY);
+                packetRoot.spawn(io.github.retrooper.packetevents.util.SpigotConversionUtil.fromBukkitLocation(origin));
+                if (packetRoot.getEntityMeta() instanceof TextDisplayMeta meta) {
+                    meta.setText(net.kyori.adventure.text.Component.empty());
+                    meta.setBackgroundColor(0);
+                    if (packetRoot.getEntityMeta() instanceof AbstractDisplayMeta displayMeta) {
+                        displayMeta.setViewRange((float) viewDistance / 16f);
+                        displayMeta.setScale(new com.github.retrooper.packetevents.util.Vector3f(0.0001f, 0.0001f, 0.0001f));
+                    }
                 }
-            }
+
+                // IMPORTANT: Add passengers BEFORE adding viewers to avoid sending individual packets
+                for (Shape shape : shapes) {
+                    shape.spawn();
+                    if (shape instanceof PacketTriangle pt) {
+                        for (WrapperEntity entity : pt.getEntities()) {
+                            packetRoot.addPassenger(entity.getEntityId());
+                        }
+                    }
+                }
+                
+                // Add viewers at the very end to trigger a single bulk passenger packet
+                for (UUID uuid : viewers) {
+                    packetRoot.addViewer(uuid);
+                    for (Shape shape : shapes) {
+                        shape.addViewer(uuid);
+                    }
+                }
+                spawned = true;
+            });
         } else {
             bukkitRoot = origin.getWorld().spawnEntity(origin, EntityType.BLOCK_DISPLAY);
             if (bukkitRoot instanceof org.bukkit.entity.BlockDisplay blockDisplay) {
@@ -69,15 +91,9 @@ public class ModelInstance {
             }
             bukkitRoot.setGravity(false);
             bukkitRoot.setCustomName("ModelRoot:" + modelName);
-        }
 
-        for (Shape shape : shapes) {
-            shape.spawn();
-            if (renderMode == RenderMode.PACKET && packetRoot != null && shape instanceof PacketTriangle pt) {
-                for (WrapperEntity entity : pt.getEntities()) {
-                    packetRoot.addPassenger(entity.getEntityId());
-                }
-            } else if (renderMode == RenderMode.BUKKIT && bukkitRoot != null) {
+            for (Shape shape : shapes) {
+                shape.spawn();
                 for (UUID uuid : shape.getEntityUUIDs()) {
                     Entity entity = Bukkit.getEntity(uuid);
                     if (entity != null) {
@@ -85,17 +101,7 @@ public class ModelInstance {
                     }
                 }
             }
-        }
-        spawned = true;
-
-        // Add existing viewers to root
-        if (renderMode == RenderMode.PACKET && packetRoot != null) {
-            for (UUID uuid : viewers) {
-                packetRoot.addViewer(uuid);
-                for (Shape shape : shapes) {
-                    shape.addViewer(uuid);
-                }
-            }
+            spawned = true;
         }
     }
 

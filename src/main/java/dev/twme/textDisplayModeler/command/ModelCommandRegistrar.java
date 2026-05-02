@@ -101,8 +101,12 @@ public class ModelCommandRegistrar {
         if (!(context.getSource().getSender() instanceof Player player)) return 0;
         String fileName = StringArgumentType.getString(context, "filename");
         String modelName = fileName.replaceAll("(?i)\\.(stl|obj)$", "");
-        if (ModelManager.loadModel(modelName, fileName)) {
-            player.sendMessage(LanguageManager.getMessage("load.success", Placeholder.parsed("name", modelName)));
+        int facetCount = ModelManager.loadModel(modelName, fileName);
+        if (facetCount != -1) {
+            player.sendMessage(LanguageManager.getMessage("load.success", 
+                    Placeholder.parsed("name", modelName),
+                    Placeholder.parsed("facets", String.valueOf(facetCount))
+            ));
         } else {
             player.sendMessage(LanguageManager.getMessage("load.fail"));
         }

@@ -76,7 +76,7 @@ public class ModelManager {
 
             // Try to find the file with either .stl or .obj
             if (!loadedFacets.containsKey(modelName)) {
-                if (!loadModel(modelName, modelName + ".stl")) {
+                if (loadModel(modelName, modelName + ".stl") == -1) {
                     loadModel(modelName, modelName + ".obj");
                 }
             }
@@ -110,10 +110,10 @@ public class ModelManager {
         }
     }
 
-    public static boolean loadModel(String name, String fileName) {
+    public static int loadModel(String name, String fileName) {
         File file = new File(TextDisplayModeler.getInstance().getDataFolder(), "models/" + fileName);
         if (!file.exists()) {
-            return false;
+            return -1;
         }
         try {
             List<Facet> facets;
@@ -123,10 +123,10 @@ public class ModelManager {
                 facets = STLReader.read(file);
             }
             loadedFacets.put(name, facets);
-            return true;
+            return facets.size();
         } catch (IOException e) {
             e.printStackTrace();
-            return false;
+            return -1;
         }
     }
 

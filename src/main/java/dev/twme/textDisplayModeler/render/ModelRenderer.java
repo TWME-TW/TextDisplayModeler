@@ -45,6 +45,11 @@ public class ModelRenderer {
             transform.transformPosition(v2);
             transform.transformPosition(v3);
 
+            // Convert to absolute world coordinates as expected by TextDisplayShapes
+            v1.add((float) origin.getX(), (float) origin.getY(), (float) origin.getZ());
+            v2.add((float) origin.getX(), (float) origin.getY(), (float) origin.getZ());
+            v3.add((float) origin.getX(), (float) origin.getY(), (float) origin.getZ());
+
             int finalColor = facet.color() != null ? facet.color() : argbColor;
 
             Shape triangle;
