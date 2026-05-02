@@ -17,11 +17,13 @@ public class ModelRenderer {
     private static final PacketShapeFactory packetFactory = new PacketShapeFactory();
     private static final BukkitShapeFactory bukkitFactory = new BukkitShapeFactory();
 
-    public static ModelInstance assemble(String modelName, List<Facet> facets, Location origin, float scale, Vector3f rotation, RenderMode mode, double viewDistance) {
+    public static ModelInstance assemble(String modelName, List<Facet> facets, Location origin, float scale,
+            Vector3f rotation, RenderMode mode, double viewDistance) {
         return assemble(UUID.randomUUID(), modelName, facets, origin, scale, rotation, mode, viewDistance);
     }
 
-    public static ModelInstance assemble(UUID instanceId, String modelName, List<Facet> facets, Location origin, float scale, Vector3f rotation, RenderMode mode, double viewDistance) {
+    public static ModelInstance assemble(UUID instanceId, String modelName, List<Facet> facets, Location origin,
+            float scale, Vector3f rotation, RenderMode mode, double viewDistance) {
         ModelInstance instance = new ModelInstance(instanceId, modelName, facets, origin, mode);
         instance.setScale(scale);
         instance.setRotation(rotation);
@@ -45,18 +47,18 @@ public class ModelRenderer {
             Shape triangle;
             if (mode == RenderMode.PACKET) {
                 triangle = packetFactory.triangle(origin, v1, v2, v3)
-                        .doubleSided(true)
+                        .doubleSided(false)
                         .seeThrough(false)
                         .viewRange((float) viewDistance / 16f)
                         .build();
             } else {
                 triangle = bukkitFactory.triangle(origin, v1, v2, v3)
-                        .doubleSided(true)
+                        .doubleSided(false)
                         .seeThrough(false)
                         .viewRange((float) viewDistance / 16f)
                         .build();
             }
-            
+
             instance.addShape(triangle);
         }
 

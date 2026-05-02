@@ -1,0 +1,11 @@
+# TextDisplayModeler Configuration
+
+# Default settings for spawning models
+defaults:
+  scale: 1.0
+  view_distance: 64.0
+  render_mode: "packet"
+
+# Background task settings
+task:
+  visibility_check_interval_ticks: 10
