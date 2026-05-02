@@ -1,0 +1,8 @@
+name: TextDisplayModeler
+version: '${version}'
+
+main: dev.twme.textDisplayModeler.TextDisplayModeler
+api-version: '1.21.11'
+load: POSTWORLD
+
+authors: [ TWME-TW ]
