@@ -1,8 +1,6 @@
 name: TextDisplayModeler
 version: '${version}'
-
-main: dev.twme.textDisplayModeler.TextDisplayModeler
-api-version: '1.21.11'
+main: dev.twme.textdisplaymodeler.TextDisplayModeler
+api-version: '1.21'
 load: POSTWORLD
-
 authors: [ TWME-TW ]
