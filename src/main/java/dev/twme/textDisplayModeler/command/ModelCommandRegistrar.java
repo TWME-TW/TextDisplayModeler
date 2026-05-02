@@ -70,10 +70,10 @@ public class ModelCommandRegistrar {
 
         var colorArg = Commands.argument("color", StringArgumentType.string())
                 .suggests((ctx, sb) -> {
-                    sb.suggest("#FFFFFF");
-                    sb.suggest("#FF0000");
-                    sb.suggest("#00FF00");
-                    sb.suggest("#0000FF");
+                    sb.suggest("FFFFFF");
+                    sb.suggest("FF0000");
+                    sb.suggest("00FF00");
+                    sb.suggest("0000FF");
                     return sb.buildFuture();
                 })
                 .executes(ctx -> executeSpawn(ctx,
