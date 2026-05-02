@@ -43,7 +43,14 @@ public class ModelCommandRegistrar {
                             }
                             return suggestionsBuilder.buildFuture();
                         })
-                        .executes(this::executeLoad)));
+                        .executes(this::executeLoad)))
+                .then(Commands.literal("unload")
+                        .then(Commands.argument("name", StringArgumentType.string())
+                                .suggests((ctx, sb) -> {
+                                    ModelManager.getLoadedFacets().keySet().forEach(sb::suggest);
+                                    return sb.buildFuture();
+                                })
+                                .executes(this::executeUnload)));
 
         // Subcommand: spawn <name> <mode> [scale] [viewDistance] [color]
         var nameArg = Commands.argument("name", StringArgumentType.string())
@@ -202,6 +209,17 @@ public class ModelCommandRegistrar {
         if (!(context.getSource().getSender() instanceof Player player)) return 0;
         ModelManager.removeAll();
         player.sendMessage(LanguageManager.getMessage("system.remove_all"));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int executeUnload(CommandContext<CommandSourceStack> context) {
+        if (!(context.getSource().getSender() instanceof Player player)) return 0;
+        String name = StringArgumentType.getString(context, "name");
+        if (ModelManager.unloadModel(name)) {
+            player.sendMessage(LanguageManager.getMessage("unload.success", Placeholder.parsed("name", name)));
+        } else {
+            player.sendMessage(LanguageManager.getMessage("unload.fail", Placeholder.parsed("name", name)));
+        }
         return Command.SINGLE_SUCCESS;
     }
 }

@@ -56,14 +56,14 @@ public class ModelRenderer {
             if (mode == RenderMode.PACKET) {
                 triangle = packetFactory.triangle(origin, v1, v2, v3)
                         .color(finalColor)
-                        .doubleSided(false)
+                        .doubleSided(false) // Force double sided to eliminate normal issues
                         .seeThrough(false)
                         .viewRange((float) viewDistance / 16f)
                         .build();
             } else {
                 triangle = bukkitFactory.triangle(origin, v1, v2, v3)
                         .color(finalColor)
-                        .doubleSided(false)
+                        .doubleSided(false) // Force double sided
                         .seeThrough(false)
                         .viewRange((float) viewDistance / 16f)
                         .build();

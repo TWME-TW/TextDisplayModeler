@@ -7,6 +7,7 @@ help:
   header: "<gold>=== TextDisplayModeler Commands ===</gold>"
   list: "<yellow>/tsmodel list [page]</yellow> <gray>- List all models</gray>"
   load: "<yellow>/tsmodel load <filename></yellow> <gray>- Load a model file</gray>"
+  unload: "<yellow>/tsmodel unload <name></yellow> <gray>- Unload a model from memory</gray>"
   spawn: "<yellow>/tsmodel spawn <name> <bukkit|packet> [scale] [viewDistance] [color]</yellow> <gray>- Spawn a model</gray>"
   removeall: "<yellow>/tsmodel removeall</yellow> <gray>- Remove all models</gray>"
 
@@ -21,6 +22,11 @@ load:
   success: "<green>Successfully loaded model: <name> (<facets> facets)</green>"
   fail: "<red>Failed to load model. Check if the file exists in plugins/TextDisplayModeler/models/</red>"
   usage: "<red>Usage: /tsmodel load <filename></red>"
+
+unload:
+  success: "<green>Successfully unloaded model: <name></green>"
+  fail: "<red>Model <name> is not loaded.</red>"
+  usage: "<red>Usage: /tsmodel unload <name></red>"
 
 spawn:
   success: "<green>Spawned model: <name> (Mode: <mode>, Scale: <scale>, ViewDist: <viewdist>)</green>"

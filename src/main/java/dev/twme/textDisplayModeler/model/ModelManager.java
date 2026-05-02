@@ -89,11 +89,16 @@ public class ModelManager {
             if (instanceSec == null) continue;
 
             // Check world name before getting location to avoid "unknown world" error
-            String storedWorld = instanceSec.getString("location.world");
+            String storedWorld = instanceSec.getString("world");
             if (storedWorld == null || !storedWorld.equals(worldName)) continue;
 
-            Location loc = instanceSec.getLocation("location");
-            if (loc == null || loc.getWorld() == null) continue;
+            org.bukkit.World world = Bukkit.getWorld(worldName);
+            if (world == null) continue;
+
+            double x = instanceSec.getDouble("x");
+            double y = instanceSec.getDouble("y");
+            double z = instanceSec.getDouble("z");
+            Location loc = new Location(world, x, y, z);
 
             UUID id = UUID.fromString(key);
             
@@ -132,7 +137,10 @@ public class ModelManager {
         for (ModelInstance instance : activeInstances) {
             String path = "instances." + instance.getInstanceId().toString();
             instancesConfig.set(path + ".modelName", instance.getModelName());
-            instancesConfig.set(path + ".location", instance.getOrigin());
+            instancesConfig.set(path + ".world", instance.getOrigin().getWorld().getName());
+            instancesConfig.set(path + ".x", instance.getOrigin().getX());
+            instancesConfig.set(path + ".y", instance.getOrigin().getY());
+            instancesConfig.set(path + ".z", instance.getOrigin().getZ());
             instancesConfig.set(path + ".scale", instance.getScale());
             instancesConfig.set(path + ".rotation.x", instance.getRotation().x);
             instancesConfig.set(path + ".rotation.y", instance.getRotation().y);
@@ -158,17 +166,70 @@ public class ModelManager {
             if (fileName.toLowerCase().endsWith(".obj")) {
                 facets = dev.twme.textdisplaymodeler.loader.OBJReader.read(file);
             } else {
-                facets = STLReader.read(file);
+                facets = dev.twme.textdisplaymodeler.loader.STLReader.read(file);
             }
+
+            if (facets != null && !facets.isEmpty()) {
+                // --- Auto-Center and Axis Correction Logic ---
+                Vector3f min = new Vector3f(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
+                Vector3f max = new Vector3f(-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
+
+                for (Facet f : facets) {
+                    updateMinMax(min, max, f.v1());
+                    updateMinMax(min, max, f.v2());
+                    updateMinMax(min, max, f.v3());
+                }
+
+                Vector3f center = new Vector3f();
+                min.add(max, center).mul(0.5f);
+
+                // Calculate max dimension for normalization
+                float sizeX = max.x - min.x;
+                float sizeY = max.y - min.y;
+                float sizeZ = max.z - min.z;
+                float maxSize = Math.max(sizeX, Math.max(sizeY, sizeZ));
+                
+                // If model is effectively flat or empty, prevent division by zero
+                if (maxSize < 0.0001f) maxSize = 1.0f;
+                
+                float normalizationScale = 1.0f / maxSize;
+
+                for (Facet f : facets) {
+                    // Subtract center and normalize scale to 1x1x1
+                    f.v1().sub(center).mul(normalizationScale);
+                    f.v2().sub(center).mul(normalizationScale);
+                    f.v3().sub(center).mul(normalizationScale);
+                }
+            }
+
             loadedFacets.put(name, facets);
-            return facets.size();
+            return facets != null ? facets.size() : 0;
         } catch (IOException e) {
             e.printStackTrace();
             return -1;
         }
     }
 
+    private static void updateMinMax(Vector3f min, Vector3f max, Vector3f v) {
+        if (v.x < min.x) min.x = v.x;
+        if (v.y < min.y) min.y = v.y;
+        if (v.z < min.z) min.z = v.z;
+        if (v.x > max.x) max.x = v.x;
+        if (v.y > max.y) max.y = v.y;
+        if (v.z > max.z) max.z = v.z;
+    }
+
+    public static boolean unloadModel(String name) {
+        return loadedFacets.remove(name) != null;
+    }
+
     public static ModelInstance spawnModel(String name, Location location, float scale, Vector3f rotation, RenderMode mode, double viewDistance, int color) {
+        if (!loadedFacets.containsKey(name)) {
+            if (loadModel(name, name + ".stl") == -1) {
+                loadModel(name, name + ".obj");
+            }
+        }
+        
         List<Facet> facets = loadedFacets.get(name);
         if (facets == null) {
             return null;
