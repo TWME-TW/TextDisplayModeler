@@ -13,7 +13,7 @@ help:
 
 list:
   header: "<gold>=== Models (Page <page>/<total>) ===</gold>"
-  item: "<yellow>- <white><file></white> <gray>[<click:run_command:'/tsmodel load <file>'><hover:show_text:'<green>Click to load <file>'><aqua>Load</aqua></hover></click>] [<click:suggest_command:'/tsmodel spawn <name> packet 1.0 64'><hover:show_text:'<aqua>Click to suggest spawn command'><green>Spawn</green></hover></click>]</gray>"
+  item: "<yellow>- <white><file></white> <gray>[<click:run_command:'/tsmodel load \"<file>\"'><hover:show_text:'<green>Click to load <file>'><aqua>Load</aqua></hover></click>] [<click:suggest_command:'/tsmodel spawn \"<name>\" packet 1.0 64'><hover:show_text:'<aqua>Click to suggest spawn command'><green>Spawn</green></hover></click>]</gray>"
   footer: "<gray>Use /tsmodel list <page> to see more.</gray>"
   no_files: "<red>No .stl or .obj files found in models folder.</red>"
   invalid_page: "<red>Invalid page number. Total pages: <total></red>"
@@ -21,18 +21,18 @@ list:
 load:
   success: "<green>Successfully loaded model: <name> (<facets> facets)</green>"
   fail: "<red>Failed to load model. Check if the file exists in plugins/TextDisplayModeler/models/</red>"
-  usage: "<red>Usage: /tsmodel load <filename></red>"
+  usage: "<red>Usage: /tsmodel load \"<filename>\"</red>"
 
 unload:
   success: "<green>Successfully unloaded model: <name></green>"
   fail: "<red>Model <name> is not loaded.</red>"
-  usage: "<red>Usage: /tsmodel unload <name></red>"
+  usage: "<red>Usage: /tsmodel unload \"<name>\"</red>"
 
 spawn:
   success: "<green>Spawned model: <name> (Mode: <mode>, Scale: <scale>, ViewDist: <viewdist>)</green>"
   fail: "<red>Model not found. Load it first using /tsmodel load</red>"
   invalid_mode: "<red>Invalid mode. Use 'bukkit' or 'packet'.</red>"
-  usage: "<red>Usage: /tsmodel spawn <modelName> <bukkit|packet> [scale] [viewDistance] [color]</red>"
+  usage: "<red>Usage: /tsmodel spawn \"<modelName>\" <bukkit|packet> [scale] [viewDistance] [color]</red>"
 
 system:
   remove_all: "<yellow>Removed all active model instances.</yellow>"
