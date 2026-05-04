@@ -101,7 +101,32 @@ public class ModelCommandRegistrar {
         builder.then(Commands.literal("removeall")
                 .executes(this::executeRemoveAll));
 
+        // Subcommand: debug
+        builder.then(Commands.literal("debug")
+                .executes(this::executeDebug));
+
         commands.register(builder.build(), "Main STL Rendering Command", List.of("tsmodel"));
+    }
+
+    private int executeDebug(CommandContext<CommandSourceStack> context) {
+        if (!(context.getSource().getSender() instanceof Player player)) return 0;
+        Location loc = player.getLocation();
+        loc.setYaw(0);
+        loc.setPitch(0);
+        
+        dev.twme.textdisplayshape.shape.Shape shape = new dev.twme.textdisplayshape.packet.PacketShapeFactory()
+            .triangle(loc, 
+                new org.joml.Vector3f((float)loc.getX(), (float)loc.getY() + 1, (float)loc.getZ()), 
+                new org.joml.Vector3f((float)loc.getX() - 1, (float)loc.getY(), (float)loc.getZ()), 
+                new org.joml.Vector3f((float)loc.getX() + 1, (float)loc.getY(), (float)loc.getZ()))
+            .rootAnchor(true)
+            .color(0xFFFF0000) // Red
+            .build();
+            
+        shape.spawn();
+        shape.addViewer(player.getUniqueId());
+        player.sendMessage("§aSpawned debug red triangle! If this is broken, TextDisplayShapes is broken.");
+        return Command.SINGLE_SUCCESS;
     }
 
     private int executeLoad(CommandContext<CommandSourceStack> context) {

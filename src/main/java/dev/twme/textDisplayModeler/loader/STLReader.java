@@ -62,13 +62,19 @@ public class STLReader {
             }
             ByteBuffer bb = ByteBuffer.wrap(facetBuffer).order(ByteOrder.LITTLE_ENDIAN);
             
-            Vector3f normal = new Vector3f(bb.getFloat(), bb.getFloat(), bb.getFloat());
-            Vector3f v1 = new Vector3f(bb.getFloat(), bb.getFloat(), bb.getFloat());
-            Vector3f v2 = new Vector3f(bb.getFloat(), bb.getFloat(), bb.getFloat());
-            Vector3f v3 = new Vector3f(bb.getFloat(), bb.getFloat(), bb.getFloat());
+            // Convert STL Z-up to Minecraft Y-up: STL(x,y,z) -> MC(y,z,x)
+            // This cyclic permutation has det=+1 (preserves face winding)
+            float nx = bb.getFloat(), ny = bb.getFloat(), nz = bb.getFloat();
+            Vector3f normal = new Vector3f(ny, nz, nx);
+            float v1x = bb.getFloat(), v1y = bb.getFloat(), v1z = bb.getFloat();
+            Vector3f v1 = new Vector3f(v1y, v1z, v1x);
+            float v2x = bb.getFloat(), v2y = bb.getFloat(), v2z = bb.getFloat();
+            Vector3f v2 = new Vector3f(v2y, v2z, v2x);
+            float v3x = bb.getFloat(), v3y = bb.getFloat(), v3z = bb.getFloat();
+            Vector3f v3 = new Vector3f(v3y, v3z, v3x);
             // bb.getShort(); // attribute byte count
 
-            facets.add(new Facet(normal, v1, v2, v3));
+            facets.add(new Facet(v1, v2, v3, normal));
         }
 
         return facets;
@@ -85,21 +91,23 @@ public class STLReader {
                 line = line.trim().toLowerCase();
                 if (line.startsWith("facet normal")) {
                     String[] parts = line.split("\\s+");
+                    // Convert STL Z-up to Minecraft Y-up: STL(x,y,z) -> MC(y,z,x)
                     normal = new Vector3f(
-                            Float.parseFloat(parts[2]),
                             Float.parseFloat(parts[3]),
-                            Float.parseFloat(parts[4])
+                            Float.parseFloat(parts[4]),
+                            Float.parseFloat(parts[2])
                     );
                 } else if (line.startsWith("vertex")) {
                     String[] parts = line.split("\\s+");
+                    // Convert STL Z-up to Minecraft Y-up: STL(x,y,z) -> MC(y,z,x)
                     vertices.add(new Vector3f(
-                            Float.parseFloat(parts[1]),
                             Float.parseFloat(parts[2]),
-                            Float.parseFloat(parts[3])
+                            Float.parseFloat(parts[3]),
+                            Float.parseFloat(parts[1])
                     ));
                 } else if (line.startsWith("endfacet")) {
                     if (vertices.size() == 3) {
-                        facets.add(new Facet(normal, vertices.get(0), vertices.get(1), vertices.get(2)));
+                        facets.add(new Facet(vertices.get(0), vertices.get(1), vertices.get(2), normal));
                     }
                     vertices.clear();
                 }

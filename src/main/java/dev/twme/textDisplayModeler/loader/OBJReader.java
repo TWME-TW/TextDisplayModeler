@@ -62,7 +62,8 @@ public class OBJReader {
                             Vector3f v1 = vertices.get(faceIndices.get(0));
                             Vector3f v2 = vertices.get(faceIndices.get(i));
                             Vector3f v3 = vertices.get(faceIndices.get(i + 1));
-                            facets.add(new Facet(v1, v2, v3, new Vector3f(0, 0, 0), currentColor));
+                            // IMPORTANT: Create new Vector3f copies so that shared vertices don't get mutated multiple times
+                            facets.add(new Facet(new Vector3f(v1), new Vector3f(v2), new Vector3f(v3), new Vector3f(0, 0, 0), currentColor));
                         }
                     }
                 }

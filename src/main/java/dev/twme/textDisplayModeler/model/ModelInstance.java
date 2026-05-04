@@ -33,10 +33,6 @@ public class ModelInstance {
     private int argbColor = 0xFFFFFFFF; // Default white
     private boolean spawned = false;
 
-    // Root entities
-    private WrapperEntity packetRoot;
-    private Entity bukkitRoot;
-
     public ModelInstance(UUID instanceId, String modelName, List<Facet> facets, Location origin, RenderMode renderMode) {
         this.instanceId = instanceId;
         this.modelName = modelName;
@@ -54,30 +50,11 @@ public class ModelInstance {
 
         if (renderMode == RenderMode.PACKET) {
             Bukkit.getScheduler().runTaskAsynchronously(TextDisplayModeler.getInstance(), () -> {
-                packetRoot = new WrapperEntity(com.github.retrooper.packetevents.protocol.entity.type.EntityTypes.TEXT_DISPLAY);
-                packetRoot.spawn(io.github.retrooper.packetevents.util.SpigotConversionUtil.fromBukkitLocation(origin));
-                if (packetRoot.getEntityMeta() instanceof TextDisplayMeta meta) {
-                    meta.setText(net.kyori.adventure.text.Component.empty());
-                    meta.setBackgroundColor(0);
-                    if (packetRoot.getEntityMeta() instanceof AbstractDisplayMeta displayMeta) {
-                        displayMeta.setViewRange((float) viewDistance / 16f);
-                        displayMeta.setScale(new com.github.retrooper.packetevents.util.Vector3f(1f, 1f, 1f));
-                    }
-                }
-
-                // IMPORTANT: Add passengers BEFORE adding viewers to avoid sending individual packets
                 for (Shape shape : shapes) {
                     shape.spawn();
-                    if (shape instanceof PacketTriangle pt) {
-                        for (WrapperEntity entity : pt.getEntities()) {
-                            packetRoot.addPassenger(entity.getEntityId());
-                        }
-                    }
                 }
                 
-                // Add viewers at the very end to trigger a single bulk passenger packet
                 for (UUID uuid : viewers) {
-                    packetRoot.addViewer(uuid);
                     for (Shape shape : shapes) {
                         shape.addViewer(uuid);
                     }
@@ -85,21 +62,8 @@ public class ModelInstance {
                 spawned = true;
             });
         } else {
-            bukkitRoot = origin.getWorld().spawnEntity(origin, EntityType.BLOCK_DISPLAY);
-            if (bukkitRoot instanceof org.bukkit.entity.BlockDisplay blockDisplay) {
-                blockDisplay.setBlock(org.bukkit.Material.AIR.createBlockData());
-            }
-            bukkitRoot.setGravity(false);
-            bukkitRoot.setCustomName("ModelRoot:" + modelName);
-
             for (Shape shape : shapes) {
                 shape.spawn();
-                for (UUID uuid : shape.getEntityUUIDs()) {
-                    Entity entity = Bukkit.getEntity(uuid);
-                    if (entity != null) {
-                        bukkitRoot.addPassenger(entity);
-                    }
-                }
             }
             spawned = true;
         }
@@ -109,21 +73,12 @@ public class ModelInstance {
         for (Shape shape : shapes) {
             shape.remove();
         }
-        if (packetRoot != null) {
-            packetRoot.remove();
-            packetRoot = null;
-        }
-        if (bukkitRoot != null) {
-            bukkitRoot.remove();
-            bukkitRoot = null;
-        }
         spawned = false;
     }
 
     public void addViewer(Player player) {
         viewers.add(player.getUniqueId());
         if (spawned) {
-            if (packetRoot != null) packetRoot.addViewer(player.getUniqueId());
             for (Shape shape : shapes) {
                 shape.addViewer(player.getUniqueId());
             }
@@ -133,7 +88,6 @@ public class ModelInstance {
     public void removeViewer(Player player) {
         viewers.remove(player.getUniqueId());
         if (spawned) {
-            if (packetRoot != null) packetRoot.removeViewer(player.getUniqueId());
             for (Shape shape : shapes) {
                 shape.removeViewer(player.getUniqueId());
             }
@@ -186,13 +140,5 @@ public class ModelInstance {
 
     public void setArgbColor(int argbColor) {
         this.argbColor = argbColor;
-    }
-
-    public WrapperEntity getPacketRoot() {
-        return packetRoot;
-    }
-
-    public Entity getBukkitRoot() {
-        return bukkitRoot;
     }
 }
