@@ -8,7 +8,7 @@ help:
   list: "<yellow>/tsmodel list [page]</yellow> <gray>- List all models</gray>"
   load: "<yellow>/tsmodel load <filename></yellow> <gray>- Load a model file</gray>"
   unload: "<yellow>/tsmodel unload <name></yellow> <gray>- Unload a model from memory</gray>"
-  spawn: "<yellow>/tsmodel spawn <name> <bukkit|packet> [scale] [viewDistance] [color]</yellow> <gray>- Spawn a model</gray>"
+  spawn: "<yellow>/tsmodel spawn <name> <bukkit|packet> [scale] [viewDistance] [color] [shadow]</yellow> <gray>- Spawn a model</gray>"
   removeall: "<yellow>/tsmodel removeall</yellow> <gray>- Remove all models</gray>"
 
 list:
@@ -29,10 +29,10 @@ unload:
   usage: "<red>Usage: /tsmodel unload \"<name>\"</red>"
 
 spawn:
-  success: "<green>Spawned model: <name> (Mode: <mode>, Scale: <scale>, ViewDist: <viewdist>)</green>"
+  success: "<green>Spawned model: <name> (Mode: <mode>, Scale: <scale>, ViewDist: <viewdist>, Shadow: <shadow>)</green>"
   fail: "<red>Model not found. Load it first using /tsmodel load</red>"
   invalid_mode: "<red>Invalid mode. Use 'bukkit' or 'packet'.</red>"
-  usage: "<red>Usage: /tsmodel spawn \"<modelName>\" <bukkit|packet> [scale] [viewDistance] [color]</red>"
+  usage: "<red>Usage: /tsmodel spawn \"<modelName>\" <bukkit|packet> [scale] [viewDistance] [color] [shadow]</red>"
 
 system:
   remove_all: "<yellow>Removed all active model instances.</yellow>"

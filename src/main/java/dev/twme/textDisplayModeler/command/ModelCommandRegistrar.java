@@ -1,13 +1,22 @@
 package dev.twme.textdisplaymodeler.command;
 
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+import org.joml.Vector3f;
+
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+
 import dev.twme.textdisplaymodeler.LanguageManager;
 import dev.twme.textdisplaymodeler.model.ModelInstance;
 import dev.twme.textdisplaymodeler.model.ModelManager;
@@ -15,13 +24,6 @@ import dev.twme.textdisplaymodeler.model.RenderMode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
-import org.joml.Vector3f;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
 
 public class ModelCommandRegistrar {
 
@@ -64,16 +66,16 @@ public class ModelCommandRegistrar {
                     Arrays.stream(RenderMode.values()).forEach(mode -> sb.suggest(mode.name().toLowerCase()));
                     return sb.buildFuture();
                 })
-                .executes(ctx -> executeSpawn(ctx, 1.0f, 64.0, 0xFFFFFFFF));
+                .executes(ctx -> executeSpawn(ctx, 1.0f, 64.0, 0xFFFFFFFF, true));
 
         var scaleArg = Commands.argument("scale", FloatArgumentType.floatArg(0.01f))
-                .executes(ctx -> executeSpawn(ctx, FloatArgumentType.getFloat(ctx, "scale"), 64.0, 0xFFFFFFFF));
+                .executes(ctx -> executeSpawn(ctx, FloatArgumentType.getFloat(ctx, "scale"), 64.0, 0xFFFFFFFF, true));
 
         var viewDistArg = Commands.argument("viewDistance", DoubleArgumentType.doubleArg(1.0, 512.0))
                 .executes(ctx -> executeSpawn(ctx, 
                         FloatArgumentType.getFloat(ctx, "scale"), 
                         DoubleArgumentType.getDouble(ctx, "viewDistance"),
-                        0xFFFFFFFF));
+                        0xFFFFFFFF, true));
 
         var colorArg = Commands.argument("color", StringArgumentType.string())
                 .suggests((ctx, sb) -> {
@@ -86,10 +88,18 @@ public class ModelCommandRegistrar {
                 .executes(ctx -> executeSpawn(ctx,
                         FloatArgumentType.getFloat(ctx, "scale"),
                         DoubleArgumentType.getDouble(ctx, "viewDistance"),
-                        parseHexColor(StringArgumentType.getString(ctx, "color"))));
+                        parseHexColor(StringArgumentType.getString(ctx, "color")),
+                        true));
+
+        var shadowArg = Commands.argument("shadow", BoolArgumentType.bool())
+                .executes(ctx -> executeSpawn(ctx,
+                        FloatArgumentType.getFloat(ctx, "scale"),
+                        DoubleArgumentType.getDouble(ctx, "viewDistance"),
+                        parseHexColor(StringArgumentType.getString(ctx, "color")),
+                        BoolArgumentType.getBool(ctx, "shadow")));
 
         builder.then(Commands.literal("spawn")
-                .then(nameArg.then(modeArg.then(scaleArg.then(viewDistArg.then(colorArg))))));
+                .then(nameArg.then(modeArg.then(scaleArg.then(viewDistArg.then(colorArg.then(shadowArg)))))));
 
         // Subcommand: list [page]
         builder.then(Commands.literal("list")
@@ -145,7 +155,7 @@ public class ModelCommandRegistrar {
         return Command.SINGLE_SUCCESS;
     }
 
-    private int executeSpawn(CommandContext<CommandSourceStack> context, float scale, double viewDistance, int argbColor) {
+    private int executeSpawn(CommandContext<CommandSourceStack> context, float scale, double viewDistance, int argbColor, boolean shadingEnabled) {
         if (!(context.getSource().getSender() instanceof Player player)) return 0;
         String modelName = StringArgumentType.getString(context, "name");
         String modeStr = StringArgumentType.getString(context, "mode");
@@ -160,7 +170,7 @@ public class ModelCommandRegistrar {
         Location loc = player.getLocation();
         loc.setYaw(0);
         loc.setPitch(0);
-        ModelInstance instance = ModelManager.spawnModel(modelName, loc, scale, new Vector3f(0, 0, 0), mode, viewDistance, argbColor);
+        ModelInstance instance = ModelManager.spawnModel(modelName, loc, scale, new Vector3f(0, 0, 0), mode, viewDistance, argbColor, shadingEnabled);
         if (instance != null) {
             if (mode == RenderMode.PACKET) {
                 instance.addViewer(player);
@@ -169,7 +179,8 @@ public class ModelCommandRegistrar {
                     Placeholder.parsed("name", modelName),
                     Placeholder.parsed("mode", mode.name()),
                     Placeholder.parsed("scale", String.valueOf(scale)),
-                    Placeholder.parsed("viewdist", String.valueOf(viewDistance))
+                    Placeholder.parsed("viewdist", String.valueOf(viewDistance)),
+                    Placeholder.parsed("shadow", shadingEnabled ? "on" : "off")
             ));
         } else {
             player.sendMessage(LanguageManager.getMessage("spawn.fail"));

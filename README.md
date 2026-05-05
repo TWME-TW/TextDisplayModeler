@@ -6,7 +6,8 @@ TextDisplayModeler is a Minecraft Paper plugin that allows you to load and rende
 
 - **3D Model Loading**: Load standard `.stl` and `.obj` files directly from the plugin's `models` folder.
 - **Render Modes**: Choose between `bukkit` mode (standard Bukkit API) or `packet` mode (using PacketEvents for client-side rendering to save server resources).
-- **Customizable Appearance**: Dynamically scale models, set maximum view distances, and apply custom hex colors (`#FFFFFF`).
+- **Customizable Appearance**: Dynamically scale models, set maximum view distances, apply custom hex colors (`#FFFFFF`), and toggle directional shading.
+- **Directional Shading**: A built-in shadow/shading system that simulates a directional light source. Each face is brightened or darkened based on its normal vector, giving models a realistic 3D appearance. Enabled by default.
 - **Interactive UI**: Manage your models with an easy-to-use, clickable MiniMessage-based chat interface.
 
 ## Requirements
@@ -33,7 +34,7 @@ TextDisplayModeler is a Minecraft Paper plugin that allows you to load and rende
 |---|---|
 | `/tsmodel list [page]` | Lists all available models in the `models/` directory. |
 | `/tsmodel load <filename>` | Loads a model file into memory. (e.g., `/tsmodel load my_model.stl`) |
-| `/tsmodel spawn <name> <mode> [scale] [viewDistance] [color]` | Spawns a loaded model in the world at your current location. |
+| `/tsmodel spawn <name> <mode> [scale] [viewDistance] [color] [shadow]` | Spawns a loaded model in the world at your current location. |
 | `/tsmodel unload <name>` | Unloads a model from memory to free up resources. |
 | `/tsmodel removeall` | Removes all active spawned model instances. |
 | `/tsmodel debug` | Spawns a debug triangle to test if the underlying rendering engine is working. |
@@ -45,10 +46,14 @@ TextDisplayModeler is a Minecraft Paper plugin that allows you to load and rende
 - `[scale]`: Optional. The size multiplier for the model (Default: `1.0`).
 - `[viewDistance]`: Optional. How far away the model can be seen in blocks (Default: `64.0`).
 - `[color]`: Optional. The hex color code for the model (Default: `FFFFFF`).
+- `[shadow]`: Optional. Enable directional shading (`true` or `false`, Default: `true`). When enabled, each facet is shaded based on its angle relative to a fixed light source, giving the model a 3D appearance.
 
 **Example Usage**:  
 `/tsmodel spawn cube packet 2.5 128 FF0000`  
-*(Spawns a model named "cube" using packet mode, scaled 2.5x, visible up to 128 blocks away, colored Red).*
+*(Spawns a model named "cube" using packet mode, scaled 2.5x, visible up to 128 blocks away, colored Red, with shading enabled by default).*
+
+`/tsmodel spawn cube packet 2.5 128 FF0000 false`  
+*(Same as above, but with shading disabled — all faces render at full uniform brightness).*
 
 ## Building from Source
 

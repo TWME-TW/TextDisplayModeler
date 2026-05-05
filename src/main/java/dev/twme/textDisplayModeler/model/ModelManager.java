@@ -1,15 +1,5 @@
 package dev.twme.textdisplaymodeler.model;
 
-import dev.twme.textdisplaymodeler.TextDisplayModeler;
-import dev.twme.textdisplaymodeler.loader.STLReader;
-import dev.twme.textdisplaymodeler.render.ModelRenderer;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
-import org.joml.Vector3f;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,6 +7,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.joml.Vector3f;
+
+import dev.twme.textdisplaymodeler.TextDisplayModeler;
+import dev.twme.textdisplaymodeler.render.ModelRenderer;
 
 public class ModelManager {
     private static final Map<String, List<Facet>> loadedFacets = new HashMap<>();
@@ -116,6 +116,7 @@ public class ModelManager {
             RenderMode mode = RenderMode.valueOf(instanceSec.getString("mode", "PACKET"));
             double viewDist = instanceSec.getDouble("viewDistance", 64.0);
             int color = instanceSec.getInt("color", 0xFFFFFFFF);
+            boolean shadingEnabled = instanceSec.getBoolean("shadingEnabled", true);
 
             // Try to find the file with either .stl or .obj
             if (!loadedFacets.containsKey(modelName)) {
@@ -125,7 +126,7 @@ public class ModelManager {
             }
 
             if (loadedFacets.containsKey(modelName)) {
-                ModelInstance instance = ModelRenderer.assemble(id, modelName, loadedFacets.get(modelName), loc, scale, rot, mode, viewDist, color);
+                ModelInstance instance = ModelRenderer.assemble(id, modelName, loadedFacets.get(modelName), loc, scale, rot, mode, viewDist, color, shadingEnabled);
                 instance.spawn();
                 activeInstances.add(instance);
             }
@@ -148,6 +149,7 @@ public class ModelManager {
             instancesConfig.set(path + ".mode", instance.getRenderMode().name());
             instancesConfig.set(path + ".viewDistance", instance.getViewDistance());
             instancesConfig.set(path + ".color", instance.getArgbColor());
+            instancesConfig.set(path + ".shadingEnabled", instance.isShadingEnabled());
         }
         try {
             instancesConfig.save(instancesFile);
@@ -223,7 +225,7 @@ public class ModelManager {
         return loadedFacets.remove(name) != null;
     }
 
-    public static ModelInstance spawnModel(String name, Location location, float scale, Vector3f rotation, RenderMode mode, double viewDistance, int color) {
+    public static ModelInstance spawnModel(String name, Location location, float scale, Vector3f rotation, RenderMode mode, double viewDistance, int color, boolean shadingEnabled) {
         if (!loadedFacets.containsKey(name)) {
             if (loadModel(name, name + ".stl") == -1) {
                 loadModel(name, name + ".obj");
@@ -234,7 +236,7 @@ public class ModelManager {
         if (facets == null) {
             return null;
         }
-        ModelInstance instance = ModelRenderer.assemble(name, facets, location, scale, rotation, mode, viewDistance, color);
+        ModelInstance instance = ModelRenderer.assemble(name, facets, location, scale, rotation, mode, viewDistance, color, shadingEnabled);
         instance.spawn();
         activeInstances.add(instance);
         saveInstances();

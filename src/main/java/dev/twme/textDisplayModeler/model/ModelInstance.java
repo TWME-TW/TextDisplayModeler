@@ -1,23 +1,18 @@
 package dev.twme.textdisplaymodeler.model;
 
-import dev.twme.textdisplaymodeler.TextDisplayModeler;
-import dev.twme.textdisplayshape.packet.PacketTriangle;
-import dev.twme.textdisplayshape.shape.Shape;
-import me.tofaa.entitylib.meta.display.AbstractDisplayMeta;
-import me.tofaa.entitylib.meta.display.TextDisplayMeta;
-import me.tofaa.entitylib.wrapper.WrapperEntity;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.joml.Vector3f;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+import org.joml.Vector3f;
+
+import dev.twme.textdisplaymodeler.TextDisplayModeler;
+import dev.twme.textdisplayshape.shape.Shape;
 
 public class ModelInstance {
     private final UUID instanceId;
@@ -31,6 +26,7 @@ public class ModelInstance {
     private Vector3f rotation = new Vector3f(0, 0, 0);
     private double viewDistance = 64.0;
     private int argbColor = 0xFFFFFFFF; // Default white
+    private boolean shadingEnabled = true;
     private boolean spawned = false;
 
     public ModelInstance(UUID instanceId, String modelName, List<Facet> facets, Location origin, RenderMode renderMode) {
@@ -140,5 +136,13 @@ public class ModelInstance {
 
     public void setArgbColor(int argbColor) {
         this.argbColor = argbColor;
+    }
+
+    public boolean isShadingEnabled() {
+        return shadingEnabled;
+    }
+
+    public void setShadingEnabled(boolean shadingEnabled) {
+        this.shadingEnabled = shadingEnabled;
     }
 }
